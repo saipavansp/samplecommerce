@@ -113,11 +113,11 @@ export default function Products() {
             <p className="text-gray-600">Try adjusting your filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 mb-12">
+          <div className="product-grid">
             {sortedItems.map((product) => (
               <div key={product._id} className="group card card-hover">
                 <Link to={`/products/${product._id}`} className="block">
-                  <div className="h-36 overflow-hidden bg-gray-100 relative">
+                  <div className="thumb-wrapper relative">
                     {product.images?.[0] ? (
                       <img
                         src={product.images[0]}

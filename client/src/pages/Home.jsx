@@ -121,14 +121,14 @@ export default function Home() {
               <h2 className="text-2xl md:text-3xl font-bold mb-3">Featured Equipment</h2>
               <p className="text-lg text-gray-600">Our best-selling industrial solutions</p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="product-grid">
               {featuredProducts.map((product) => (
                 <Link
                   key={product._id}
                   to={`/products/${product._id}`}
                   className="group card card-hover"
                 >
-                  <div className="h-32 overflow-hidden bg-gray-100">
+                  <div className="thumb-wrapper">
                     {product.images?.[0] ? (
                       <img
                         src={product.images[0]}

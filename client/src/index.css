@@ -6,6 +6,10 @@
 }
 
 :root {
+  /* Design tokens */
+  --brand:#2563eb; --brand-600:#1d4ed8; --text:#0f172a; --muted:#64748b; --bg:#ffffff; --surface:#f8fafc;
+  --radius:12px; --shadow-1:0 1px 2px rgba(0,0,0,.06); --shadow-2:0 6px 24px rgba(0,0,0,.08);
+  --gap-1:4px; --gap-2:8px; --gap-3:12px; --gap-4:16px; --gap-5:20px; --gap-6:24px; --gap-8:32px; --gap-10:40px; --gap-12:48px; --gap-16:64px;
   /* Blue Theme Colors */
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;
@@ -39,12 +43,13 @@
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
   line-height: 1.5;
-  color: var(--gray-900);
-  background-color: var(--gray-50);
+  color: var(--text);
+  background-color: var(--bg);
 }
 
 /* Typography */
@@ -70,11 +75,7 @@ h1, h2, h3, h4, h5, h6 {
 .font-bold { font-weight: 700; }
 
 /* Layout */
-.container {
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
+.container { max-width: 1200px; margin: 0 auto; padding: 0 16px; width: 100%; }
 
 @media (min-width: 640px) { .container { max-width: 640px; } }
 @media (min-width: 768px) { .container { max-width: 768px; } }
@@ -490,14 +491,11 @@ button {
 
 .btn-primary {
   color: white;
-  background-color: var(--primary-600);
-  border: 1px solid var(--primary-600);
+  background-color: var(--brand);
+  border: 1px solid var(--brand);
 }
 
-.btn-primary:hover {
-  background-color: var(--primary-700);
-  border-color: var(--primary-700);
-}
+.btn-primary:hover { background-color: var(--brand-600); border-color: var(--brand-600); }
 
 .btn-primary:focus {
   outline: none;
@@ -531,6 +529,26 @@ button {
   background-color: var(--gray-100);
 }
 
+/* Icon sizing utilities */
+.icon-btn { width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; }
+.icon-16 svg{ width:16px; height:16px; }
+.icon-20 svg{ width:20px; height:20px; }
+.icon-24 svg{ width:24px; height:24px; }
+
+/* Footer sizing */
+.site-footer .icon-btn{ width:36px; height:36px; }
+.site-footer .icon-btn svg{ width:18px; height:18px; }
+
+/* Product grid helpers */
+.product-grid{ display:grid; gap: var(--gap-6); grid-template-columns: repeat(4, minmax(0,1fr)); padding: 32px 0; }
+@media (max-width:1024px){ .product-grid{ grid-template-columns: repeat(3,1fr); } }
+@media (max-width:768px){ .product-grid{ grid-template-columns: repeat(2,1fr); } }
+.thumb-wrapper{ aspect-ratio:1/1; border-radius:8px; overflow:hidden; background:#f1f5f9; display:block; }
+.thumb-wrapper img{ width:100%; height:100%; object-fit:cover; }
+
+/* PDP helpers */
+.aspect-4-5 { aspect-ratio: 4 / 5; }
+
 /* Links */
 a {
   color: var(--primary-600);
@@ -538,7 +556,7 @@ a {
   transition: color 0.15s ease-in-out;
 }
 
-a:hover {
+  a:hover {
   color: var(--primary-700);
 }
 
