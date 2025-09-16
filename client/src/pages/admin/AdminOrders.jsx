@@ -8,6 +8,8 @@ export default function AdminOrders() {
   const [selected, setSelected] = useState(null)
   const [status, setStatus] = useState('')
   const [q, setQ] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   const load = () => {
     setLoading(true)
@@ -15,6 +17,8 @@ export default function AdminOrders() {
     const params = new URLSearchParams()
     if (status) params.append('status', status)
     if (q) params.append('q', q)
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
     // Admin: fetch all orders
     api.get(`/api/orders/admin/all${params.toString() ? '?' + params.toString() : ''}`)
       .then(res => setOrders(res.data.orders || res.data || []))
@@ -38,12 +42,14 @@ export default function AdminOrders() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Orders</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <select className="w-40" value={status} onChange={(e)=>setStatus(e.target.value)}>
             <option value="">All Status</option>
             {['Pending','Processing','Shipped','Delivered','Cancelled'].map(s=> <option key={s} value={s}>{s}</option>)}
           </select>
           <input className="w-64" placeholder="Search order #" value={q} onChange={(e)=>setQ(e.target.value)} />
+          <input type="date" className="w-40" value={from} onChange={e=>setFrom(e.target.value)} />
+          <input type="date" className="w-40" value={to} onChange={e=>setTo(e.target.value)} />
           <button className="btn btn-secondary btn-sm" onClick={load}>Filter</button>
         </div>
       </div>
@@ -119,6 +125,13 @@ export default function AdminOrders() {
                     <span>Total</span>
                     <span className="font-semibold">₹{(selected.totalAmount || 0).toLocaleString('en-IN')}</span>
                   </div>
+                </div>
+                <div className="mt-4">
+                  <h4 className="font-semibold mb-2">Timeline</h4>
+                  <ul className="text-sm text-gray-600 bg-gray-50 rounded p-3 space-y-1">
+                    <li>Created: {new Date(selected.createdAt).toLocaleString('en-IN')}</li>
+                    <li>Current Status: {selected.orderStatus || 'Pending'}</li>
+                  </ul>
                 </div>
               </div>
             </div>
