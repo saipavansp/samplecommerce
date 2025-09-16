@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 const formatINR = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n)
 
 export default function Home() {
+  const { spoofAdmin } = useAuth()
   const [featuredProducts, setFeaturedProducts] = useState([])
   
   useEffect(() => {
@@ -75,6 +77,9 @@ export default function Home() {
               <Link to="/contact" className="btn border-2 border-white text-white hover:bg-white hover:text-primary-700">
                 Get Quote
               </Link>
+              <button onClick={spoofAdmin} className="btn btn-secondary">
+                Admin (demo)
+              </button>
             </div>
           </div>
         </div>

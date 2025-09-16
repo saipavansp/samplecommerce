@@ -38,7 +38,14 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
-  const value = useMemo(() => ({ user, loading, login, register, logout }), [user, loading])
+  // DEV ONLY: quick admin spoof for demo without credentials
+  const spoofAdmin = () => {
+    const fakeToken = 'demo'
+    localStorage.setItem('token', fakeToken)
+    setUser({ email: 'admin@demo.local', role: 'admin', firstName: 'Admin', lastName: 'Demo' })
+  }
+
+  const value = useMemo(() => ({ user, loading, login, register, logout, spoofAdmin }), [user, loading])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
