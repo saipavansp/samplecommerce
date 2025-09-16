@@ -53,6 +53,20 @@ const getMyOrders = async (req, res) => {
   }
 };
 
+// Admin: list all orders with optional filters
+const getAllOrders = async (req, res) => {
+  try {
+    const { status, q } = req.query;
+    const filter = {};
+    if (status) filter.orderStatus = status;
+    if (q) filter.orderNumber = { $regex: q, $options: 'i' };
+    const orders = await Order.find(filter).sort({ createdAt: -1 });
+    return res.json({ orders });
+  } catch (err) {
+    return res.status(500).json({ message: err.message || 'Failed to fetch orders' });
+  }
+};
+
 const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -78,6 +92,6 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getMyOrders, getOrderById, updateOrderStatus };
+module.exports = { createOrder, getMyOrders, getAllOrders, getOrderById, updateOrderStatus };
 
 

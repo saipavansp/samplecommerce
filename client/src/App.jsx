@@ -16,6 +16,10 @@ import Profile from './pages/Profile'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import './index.css'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminProducts from './pages/admin/AdminProducts'
+import AdminOrders from './pages/admin/AdminOrders'
+import AdminInventory from './pages/admin/AdminInventory'
 
 function Layout({ children }) {
   return (
@@ -47,6 +51,14 @@ function App() {
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
             <Route path="/login" element={<Layout><Login /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
+
+            {/* Admin */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<div className="bg-white rounded-lg shadow p-6">Welcome, Admin.</div>} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="inventory" element={<AdminInventory />} />
+              <Route path="orders" element={<AdminOrders />} />
+            </Route>
           </Routes>
         </BrowserRouter>
       </CartProvider>
