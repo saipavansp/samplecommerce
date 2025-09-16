@@ -2,11 +2,13 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 const formatINR = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n)
 
 export default function Home() {
   const { spoofAdmin } = useAuth()
+  const navigate = useNavigate()
   const [featuredProducts, setFeaturedProducts] = useState([])
   
   useEffect(() => {
@@ -77,9 +79,13 @@ export default function Home() {
               <Link to="/contact" className="btn border-2 border-white text-white hover:bg-white hover:text-primary-700">
                 Get Quote
               </Link>
-              <button onClick={spoofAdmin} className="btn btn-secondary">
+              <Link
+                to="/admin"
+                onClick={(e) => { e.preventDefault(); spoofAdmin(); setTimeout(() => navigate('/admin'), 0) }}
+                className="btn btn-secondary"
+              >
                 Admin (demo)
-              </button>
+              </Link>
             </div>
           </div>
         </div>
