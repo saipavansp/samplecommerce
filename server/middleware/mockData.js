@@ -258,9 +258,32 @@ const mockProducts = [
   },
 ];
 
+// Very small in-memory mock orders for admin demo
+let mockOrders = [
+  {
+    _id: 'o1',
+    orderNumber: 'PST-1001',
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    items: [ { productId: '1', quantity: 1, price: 420000, name: 'CNC Glass Cutting Table' } ],
+    totalAmount: 420000,
+    orderStatus: 'Pending',
+    paymentStatus: 'unpaid',
+  },
+  {
+    _id: 'o2',
+    orderNumber: 'PST-1002',
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    items: [ { productId: '2', quantity: 1, price: 299000, name: 'Glass Edge Polishing Machine' } ],
+    totalAmount: 299000,
+    orderStatus: 'Processing',
+    paymentStatus: 'unpaid',
+  },
+]
+
 const mockDataMiddleware = (req, res, next) => {
   // If MongoDB is not connected, use mock data
   if (process.env.USE_MOCK_DATA === 'true') {
+    // Products list
     if (req.path === '/api/products' && req.method === 'GET') {
       return res.json({
         items: mockProducts,
@@ -269,6 +292,40 @@ const mockDataMiddleware = (req, res, next) => {
         pages: 1
       });
     }
+    // Create product
+    if (req.path === '/api/products' && req.method === 'POST') {
+      const body = req.body || {}
+      const newProd = {
+        _id: Date.now().toString(),
+        name: body.name || 'New Product',
+        description: body.description || '',
+        category: body.category || 'General',
+        price: Number(body.price) || 0,
+        discountPrice: body.discountPrice ? Number(body.discountPrice) : undefined,
+        images: Array.isArray(body.images) ? body.images : [],
+        stock: Number(body.stock) || 0,
+        sku: body.sku || undefined,
+        isActive: true,
+      }
+      mockProducts.unshift(newProd)
+      return res.status(201).json({ product: newProd })
+    }
+    // Update product
+    if (req.path.startsWith('/api/products/') && req.method === 'PUT') {
+      const id = req.path.split('/').pop();
+      const idx = mockProducts.findIndex(p => p._id === id)
+      if (idx === -1) return res.status(404).json({ message: 'Product not found' })
+      mockProducts[idx] = { ...mockProducts[idx], ...req.body }
+      return res.json({ product: mockProducts[idx] })
+    }
+    // Delete product
+    if (req.path.startsWith('/api/products/') && req.method === 'DELETE') {
+      const id = req.path.split('/').pop();
+      const idx = mockProducts.findIndex(p => p._id === id)
+      if (idx === -1) return res.status(404).json({ message: 'Product not found' })
+      const [removed] = mockProducts.splice(idx, 1)
+      return res.json({ product: removed })
+    }
     if (req.path.startsWith('/api/products/') && req.method === 'GET') {
       const id = req.path.split('/').pop();
       const product = mockProducts.find(p => p._id === id);
@@ -276,6 +333,26 @@ const mockDataMiddleware = (req, res, next) => {
         return res.json({ product });
       }
       return res.status(404).json({ message: 'Product not found' });
+    }
+    // Orders mock
+    if (req.path === '/api/orders' && req.method === 'GET') {
+      return res.json({ orders: mockOrders })
+    }
+    if (req.path === '/api/orders/admin/all' && req.method === 'GET') {
+      return res.json({ orders: mockOrders })
+    }
+    if (req.path.startsWith('/api/orders/') && req.method === 'PUT') {
+      const id = req.path.split('/').pop();
+      const idx = mockOrders.findIndex(o => o._id === id)
+      if (idx === -1) return res.status(404).json({ message: 'Order not found' })
+      mockOrders[idx] = { ...mockOrders[idx], ...req.body }
+      return res.json({ order: mockOrders[idx] })
+    }
+    if (req.path.startsWith('/api/orders/') && req.method === 'GET') {
+      const id = req.path.split('/').pop();
+      const order = mockOrders.find(o => o._id === id)
+      if (!order) return res.status(404).json({ message: 'Order not found' })
+      return res.json({ order })
     }
   }
   next();

@@ -6,12 +6,17 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selected, setSelected] = useState(null)
+  const [status, setStatus] = useState('')
+  const [q, setQ] = useState('')
 
   const load = () => {
     setLoading(true)
     setError('')
+    const params = new URLSearchParams()
+    if (status) params.append('status', status)
+    if (q) params.append('q', q)
     // Admin: fetch all orders
-    api.get('/api/orders/admin/all')
+    api.get(`/api/orders/admin/all${params.toString() ? '?' + params.toString() : ''}`)
       .then(res => setOrders(res.data.orders || res.data || []))
       .catch(err => setError(err?.response?.data?.message || 'Failed to load orders'))
       .finally(() => setLoading(false))
@@ -33,6 +38,14 @@ export default function AdminOrders() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Orders</h2>
+        <div className="flex items-center gap-2">
+          <select className="w-40" value={status} onChange={(e)=>setStatus(e.target.value)}>
+            <option value="">All Status</option>
+            {['Pending','Processing','Shipped','Delivered','Cancelled'].map(s=> <option key={s} value={s}>{s}</option>)}
+          </select>
+          <input className="w-64" placeholder="Search order #" value={q} onChange={(e)=>setQ(e.target.value)} />
+          <button className="btn btn-secondary btn-sm" onClick={load}>Filter</button>
+        </div>
       </div>
       {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
@@ -61,7 +74,9 @@ export default function AdminOrders() {
                   <td className="p-3">₹{(o.totalAmount || 0).toLocaleString('en-IN')}</td>
                   <td className="p-3">{o.orderStatus || 'Pending'}</td>
                   <td className="p-3 text-right">
-                    <button className="btn btn-secondary btn-sm" onClick={()=>setSelected(o)}>Manage</button>
+                    <div className="inline-flex gap-2">
+                      <button className="btn btn-secondary btn-sm" onClick={()=>setSelected(o)}>View / Manage</button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -72,16 +87,40 @@ export default function AdminOrders() {
 
       {selected && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-3">Update Status</h3>
-            <p className="text-sm text-gray-600 mb-3">Order #{selected.orderNumber || selected._id?.slice(-6)}</p>
-            <div className="space-y-2">
-              {['Pending','Processing','Shipped','Delivered','Cancelled'].map(s=> (
-                <button key={s} className="w-full btn btn-secondary" onClick={()=>updateStatus(selected._id, s)}>{s}</button>
-              ))}
+          <div className="bg-white rounded-lg shadow w-full max-w-2xl">
+            <div className="p-4 border-b flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Order #{selected.orderNumber || selected._id?.slice(-6)}</h3>
+                <p className="text-sm text-gray-600">{new Date(selected.createdAt).toLocaleString('en-IN')}</p>
+              </div>
+              <button className="btn btn-secondary btn-sm" onClick={()=>setSelected(null)}>Close</button>
             </div>
-            <div className="mt-4 text-right">
-              <button className="btn btn-primary" onClick={()=>setSelected(null)}>Close</button>
+            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold mb-2">Items</h4>
+                <div className="bg-gray-50 rounded p-3">
+                  {selected.items?.map((it, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-1 text-sm border-b last:border-0">
+                      <span>{it.name} × {it.quantity}</span>
+                      <span>₹{(it.price * it.quantity).toLocaleString('en-IN')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Status</h4>
+                <div className="space-y-2">
+                  {['Pending','Processing','Shipped','Delivered','Cancelled'].map(s=> (
+                    <button key={s} className={`w-full btn btn-secondary ${selected.orderStatus===s?'border-primary-600':''}`} onClick={()=>updateStatus(selected._id, s)}>{s}</button>
+                  ))}
+                </div>
+                <div className="mt-4 bg-gray-50 rounded p-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Total</span>
+                    <span className="font-semibold">₹{(selected.totalAmount || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
