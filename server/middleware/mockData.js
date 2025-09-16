@@ -279,18 +279,28 @@ let mockOrders = [
     paymentStatus: 'unpaid',
   },
 ]
+let stockLogs = []
 
 const mockDataMiddleware = (req, res, next) => {
   // If MongoDB is not connected, use mock data
   if (process.env.USE_MOCK_DATA === 'true') {
     // Products list
     if (req.path === '/api/products' && req.method === 'GET') {
-      return res.json({
-        items: mockProducts,
-        total: mockProducts.length,
-        page: 1,
-        pages: 1
-      });
+      const { q, category, sort = 'createdAt', order = 'desc', page = '1', limit = '12' } = req.query || {}
+      let items = [...mockProducts]
+      if (q) items = items.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || (p.category||'').toLowerCase().includes(q.toLowerCase()))
+      if (category) items = items.filter(p => p.category === category)
+      items.sort((a,b)=>{
+        const dir = order === 'asc' ? 1 : -1
+        if (sort === 'price') return ((a.discountPrice||a.price) - (b.discountPrice||b.price)) * dir
+        if (sort === 'name') return a.name.localeCompare(b.name) * dir
+        return (parseInt(b._id) - parseInt(a._id)) * (order==='asc'?-1:1) // fallback
+      })
+      const pi = Math.max(1, parseInt(page))
+      const li = Math.max(1, parseInt(limit))
+      const start = (pi-1)*li
+      const paged = items.slice(start, start+li)
+      return res.json({ items: paged, total: items.length, page: pi, pages: Math.ceil(items.length/li) })
     }
     // Create product
     if (req.path === '/api/products' && req.method === 'POST') {
@@ -315,7 +325,11 @@ const mockDataMiddleware = (req, res, next) => {
       const id = req.path.split('/').pop();
       const idx = mockProducts.findIndex(p => p._id === id)
       if (idx === -1) return res.status(404).json({ message: 'Product not found' })
-      mockProducts[idx] = { ...mockProducts[idx], ...req.body }
+      const prev = mockProducts[idx]
+      mockProducts[idx] = { ...prev, ...req.body }
+      if (typeof req.body.stock !== 'undefined' && req.body.stock !== prev.stock) {
+        stockLogs.unshift({ id: Date.now().toString(), productId: prev._id, name: prev.name, from: prev.stock||0, to: req.body.stock, delta: (req.body.stock - (prev.stock||0)), at: new Date().toISOString(), reason: 'manual' })
+      }
       return res.json({ product: mockProducts[idx] })
     }
     // Delete product
@@ -339,7 +353,13 @@ const mockDataMiddleware = (req, res, next) => {
       return res.json({ orders: mockOrders })
     }
     if (req.path === '/api/orders/admin/all' && req.method === 'GET') {
-      return res.json({ orders: mockOrders })
+      const { status, q, from, to } = req.query || {}
+      let items = [...mockOrders]
+      if (status) items = items.filter(o => o.orderStatus === status)
+      if (q) items = items.filter(o => (o.orderNumber||'').toLowerCase().includes(q.toLowerCase()))
+      if (from) items = items.filter(o => new Date(o.createdAt) >= new Date(from))
+      if (to) items = items.filter(o => new Date(o.createdAt) <= new Date(to))
+      return res.json({ orders: items })
     }
     if (req.path.startsWith('/api/orders/') && req.method === 'PUT') {
       const id = req.path.split('/').pop();
@@ -353,6 +373,30 @@ const mockDataMiddleware = (req, res, next) => {
       const order = mockOrders.find(o => o._id === id)
       if (!order) return res.status(404).json({ message: 'Order not found' })
       return res.json({ order })
+    }
+    // Inventory logs
+    if (req.path === '/api/inventory/logs' && req.method === 'GET') {
+      const { limit = '50' } = req.query || {}
+      return res.json({ logs: stockLogs.slice(0, parseInt(limit)) })
+    }
+    // Bulk adjust CSV (id,delta or sku,delta not fully supported -> id only in mock)
+    if (req.path === '/api/inventory/bulk' && req.method === 'POST') {
+      const { csv } = req.body || {}
+      if (!csv) return res.status(400).json({ message: 'csv required' })
+      const lines = csv.split(/\r?\n/).map(l=>l.trim()).filter(Boolean)
+      let updated = 0
+      lines.forEach(l=>{
+        const [id, value] = l.split(',').map(s=>s.trim())
+        const idx = mockProducts.findIndex(p => p._id === id)
+        if (idx !== -1) {
+          const prev = mockProducts[idx]
+          const nextStock = Math.max(0, (prev.stock||0) + Number(value||0))
+          mockProducts[idx] = { ...prev, stock: nextStock }
+          stockLogs.unshift({ id: Date.now().toString(), productId: prev._id, name: prev.name, from: prev.stock||0, to: nextStock, delta: (nextStock - (prev.stock||0)), at: new Date().toISOString(), reason: 'bulk' })
+          updated++
+        }
+      })
+      return res.json({ updated })
     }
   }
   next();
