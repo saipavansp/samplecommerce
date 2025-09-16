@@ -17,6 +17,7 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import './index.css'
 import AdminLayout from './pages/admin/AdminLayout'
+import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminProducts from './pages/admin/AdminProducts'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminInventory from './pages/admin/AdminInventory'
@@ -54,7 +55,7 @@ function App() {
 
             {/* Admin */}
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<div className="bg-white rounded-lg shadow p-6">Welcome, Admin.</div>} />
+              <Route index element={<AdminDashboard />} />
               <Route path="products" element={<AdminProducts />} />
               <Route path="inventory" element={<AdminInventory />} />
               <Route path="orders" element={<AdminOrders />} />
