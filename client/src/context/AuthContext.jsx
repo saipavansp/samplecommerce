@@ -9,6 +9,11 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
+    // Demo token short-circuit: don't call backend for spoofed admin
+    if (token === 'demo') {
+      setUser({ email: 'admin@demo.local', role: 'admin', firstName: 'Admin', lastName: 'Demo' })
+      return setLoading(false)
+    }
     if (!token) return setLoading(false)
     api
       .get('/api/auth/profile')
